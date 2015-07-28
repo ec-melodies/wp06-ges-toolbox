@@ -103,7 +103,7 @@
 						<phase>install</phase>
 						<configuration>
 							<target>
-								<chmod dir="/application" includes="**/run" perm="755" />
+								<chmod dir="/application" includes="**/*.py" perm="755" />
 								<chmod file="/application/application.xml" perm="664"/>
 							</target>
 						</configuration>
@@ -164,6 +164,9 @@
 					<autoProvides>false</autoProvides>
 					<description>DCS Python base application</description>
 					<summary>DCS Python base application</summary>
+					<defineStatements>
+						<defineStatement>_unpackaged_files_terminate_build 0</defineStatement>
+					</defineStatements>
 					<executions>
 						
 						<execution>
@@ -204,7 +207,7 @@
 								<source>
 									<location>${basedir}/src/main/app-resources</location>
 									<includes>
-										<include>**/run</include>
+										<include>**/*.py</include>
 									</includes>
 								</source>
 							</sources>
