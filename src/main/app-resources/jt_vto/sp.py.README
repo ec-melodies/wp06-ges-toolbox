@@ -1,0 +1,219 @@
+TEST CASE
+
+sp.py -f list -p par.dat < ../inputfiles
+
+sp.py --ifile 19890701_mm-INGV--TEMP-MFSs4b3-MED-b20130712_re-fv04.00.nc --ifield=votemper --oav='[0,10,50,100,500,1000,2000]' --bm
+
+sp.py --ifile list -p par.dat < ../inputfiles
+
+sp.py --ifile list -p par.dat --bm < ../inputfiles
+
+sp.py --ifile list --ifield=votemper --bm --oat < ../inputfiles
+
+sp.py --ifile list --ifield=votemper --ilonlat='[  [[12.75, 13.0], [44.5, 45.5]] , [[12.9,13.8],[44.3,45]] ]' --oav='[0,10,50,100,500,1000,2000]' --bm < ../inputfiles
+
+sp.py --ifile list --ifield=votemper --ilonlat='[  [[12.75, 13.0], [44.5, 45.5]] , [[12.9,13.8],[44.3,45]] ]' --oav='[0,10,50,100,500,1000,2000]' --bm --oat < ../inputfiles
+
+sp.py --ifile list --ifield=votemper --ilonlat='[  [[12.75, 13.0], [44.5, 45.5]] ]' --oav='[0,10,50,100,500,1000,2000]' --oat --bm < ../inputfiles
+
+sp.py --ifile 19890701_mm-INGV--TEMP-MFSs4b3-MED-b20130712_re-fv04.00.nc --ifield=votemper --oav='[0,10,300]' --bm -v --ilonlat='[[[12.75, 12.80], [44.5, 44.6]]]'
+
+sp.py --ifile 19890701_mm-INGV--TEMP-MFSs4b3-MED-b20130712_re-fv04.00.nc --ifield=votemper --oav='[0,10]' --bm -v --ilonlat='[[[12.75, 12.80], [44.5, 44.6]]]' -v
+
+sp.py --ifile list --ifield=votemper --ilonlat='[  [[12.75, 13.0], [44.5, 45.5]] ]' --oav='[0,10,50,100,500,1000,2000]' --otc < ../inputfiles
+
+sp.py --ifile list --ifield=votemper --ilonlat='[  [[12.75, 13.0], [44.5, 45.5]] ]' --oav='[0,10,50,100,500,1000,2000]' --oat='[]' --bm < ../inputfiles
+
+sp.py --ifile list --ifield=votemper --ilonlat='[  [[12.75, 13.0], [44.5, 45.5]] ]' --oav='[0,10,50,100,500,1000,2000]' --oat='["1986-12-31 14:00","1987-01-03 12:00"]' --bm < ../inputfiles
+
+sp.py --ifile list --ifield=votemper --ilonlat='[  [[12.75, 13.0], [44.5, 45.5]] ]' --oav='[0,10,50,100,500,1000,2000]' --oat='["1986-12-31 14:00","1987-01-03 12:00"]' --bm --ofc density < ../inputfiles
+
+sp.py --ifile ../data_in/19870101_dm-INGV--TEMP-MFSs4b3-MED-b20130712_re-fv04.00.nc --ifield=votemper --oav='[0,10,50,100,500,1000,2000]' --bm --iattr=attr.txt
+
+in attr.txt
+{"votemper": {"long_name": "monthly mean map - temperature", "source": "copernicus med mfc toolbox"},"global":{"title": "monthly mean map","institution": "MELODIES WP6 ACS INGV"}}
+
+sp.py --ifile ../data_in/19870101_dm-INGV--TEMP-MFSs4b3-MED-b20130712_re-fv04.00.nc --ifield=votemper --oav='[0,10,50,100,500,1000,2000]' --bm --iattrs='{"votemper": {"long_name": "monthly mean map - temperature", "source": "copernicus med mfc toolbox"},"global":{"title": "monthly mean map","institution": "MELODIES WP6 ACS INGV"}}'
+
+
+python sp.py --ifile /home/melodies-wp6/ncpi/scratch/data_in/19870101_dm-INGV--TEMP-MFSs4b3-MED-b20130712_re-fv04.00.nc --ifield=votemper --ilonlat='[  [[12.75, 13.0], [44.5, 45.5]] ]' --oav='[0,10,50,100,500,1000,2000]' --bm
+mv out.nc out_temp.nc
+python sp.py --ifile /home/melodies-wp6/ncpi/scratch/data_in/19870101_dm-INGV--PSAL-MFSs4b3-MED-b20130712_re-fv04.00.nc --ifield=vosaline --ilonlat='[  [[12.75, 13.0], [44.5, 45.5]] ]' --oav='[0,10,50,100,500,1000,2000]' --bm
+mv out.nc out_sal.nc
+ls $PWD/out_* > inputfile.txt
+cat inputfile.txt 
+python sp.py --ifile list --ifield=votemper --ilonlat='[  [[12.75, 13.0], [44.5, 45.5]] ]' --oav='[0,10,50,100,500,1000,2000]'  --bm --ofc density < inputfile.txt
+
+
+
+
+./jt_vto/sp.py --ifile list --bm --ofc density --ofile outd/01-mapcomic2.txt.nc < in-01-mapcomic2.txt
+./jt_vto/sp.py --ifile list --bm --ofc density --ofile outd/198701-mapcomic6.txt.nc < in-198701-mapcomic6.txt
+./jt_vto/sp.py --ifile list --bm --ofc density --ofile outd/out4.txt.nc < in-out4.txt
+./jt_vto/sp.py --ifile list --bm --ofc density --ofile outd/out6.txt.nc < in-out6.txt
+./jt_vto/sp.py --ifile list --bm --ofc density --ofile outd/out_m_12.txt.nc < in-out_m_12.txt
+./jt_vto/sp.py --ifile list --bm --ofc density --ofile outd/out_ts_12.txt.nc < in-out_ts_12.txt
+
+#in-01-mapcomic2.txt
+#in-198701-mapcomic6.txt
+#in-out4.txt
+#in-out6.txt
+#in-out_m_12.txt
+#in-out_ts_12.txt
+
+#[melodies-wp6@sb-10-15-27-13 arc]$ cat in-*
+#/home/melodies-wp6/ncpi/scratch/arc/dt/01-mapcomic2.txt.out.nc
+#/home/melodies-wp6/ncpi/scratch/arc/ds/01-mapcomic2.txt.out.nc
+#/home/melodies-wp6/ncpi/scratch/arc/dt/198701-mapcomic6.txt.out.nc
+#/home/melodies-wp6/ncpi/scratch/arc/ds/198701-mapcomic6.txt.out.nc
+#/home/melodies-wp6/ncpi/scratch/arc/dt/out4.nc
+#/home/melodies-wp6/ncpi/scratch/arc/ds/out4.nc
+#/home/melodies-wp6/ncpi/scratch/arc/dt/out6.nc
+#/home/melodies-wp6/ncpi/scratch/arc/ds/out6.nc
+#/home/melodies-wp6/ncpi/scratch/arc/dt/out_m_12.nc
+#/home/melodies-wp6/ncpi/scratch/arc/ds/out_m_12.nc
+#/home/melodies-wp6/ncpi/scratch/arc/ds/out_ts_12.nc
+#/home/melodies-wp6/ncpi/scratch/arc/dt/out_ts_12.nc
+
+
+# cp -p mtc_m_ct/data/01-mapcomic2.txt.out.nc /home/melodies-wp6/ncpi/scratch/arc/dt/
+# cp -p mty_r_oa/data/out4.nc /home/melodies-wp6/ncpi/scratch/arc/dt
+# cp -p mtmg_r_om/data/out6.nc /home/melodies-wp6/ncpi/scratch/arc/dt
+# cp -p mtc_r_ct/data/out_m_12.nc /home/melodies-wp6/ncpi/scratch/arc/dt
+# cp -p mtc_r_oa/data/out_ts_12.nc /home/melodies-wp6/ncpi/scratch/arc/dt
+# cp -p mtmg_m_tm/data/198701-mapcomic6.txt.out.nc /home/melodies-wp6/ncpi/scratch/arc/dt
+
+
+
+
+
+---------1  To process one monthly mean from input file
+
+[melodies-wp6@sb-10-15-27-13 files_c]$ ls -1 *INGV*nc
+20091201_dm-INGV--RFVL-MFSs4b3-MED-b20140620_re-fv05.00.nc
+20091202_dm-INGV--RFVL-MFSs4b3-MED-b20140620_re-fv05.00.nc
+20091203_dm-INGV--RFVL-MFSs4b3-MED-b20140620_re-fv05.00.nc
+20091204_dm-INGV--RFVL-MFSs4b3-MED-b20140620_re-fv05.00.nc
+20091205_dm-INGV--RFVL-MFSs4b3-MED-b20140620_re-fv05.00.nc
+20091206_dm-INGV--RFVL-MFSs4b3-MED-b20140620_re-fv05.00.nc
+20091207_dm-INGV--RFVL-MFSs4b3-MED-b20140620_re-fv05.00.nc
+20091208_dm-INGV--RFVL-MFSs4b3-MED-b20140620_re-fv05.00.nc
+20091209_dm-INGV--RFVL-MFSs4b3-MED-b20140620_re-fv05.00.nc
+20091210_dm-INGV--RFVL-MFSs4b3-MED-b20140620_re-fv05.00.nc
+20091211_dm-INGV--RFVL-MFSs4b3-MED-b20140620_re-fv05.00.nc
+20091212_dm-INGV--RFVL-MFSs4b3-MED-b20140620_re-fv05.00.nc
+20091213_dm-INGV--RFVL-MFSs4b3-MED-b20140620_re-fv05.00.nc
+20091214_dm-INGV--RFVL-MFSs4b3-MED-b20140620_re-fv05.00.nc
+20091215_dm-INGV--RFVL-MFSs4b3-MED-b20140620_re-fv05.00.nc
+20091216_dm-INGV--RFVL-MFSs4b3-MED-b20140620_re-fv05.00.nc
+20091217_dm-INGV--RFVL-MFSs4b3-MED-b20140620_re-fv05.00.nc
+20091218_dm-INGV--RFVL-MFSs4b3-MED-b20140620_re-fv05.00.nc
+20091219_dm-INGV--RFVL-MFSs4b3-MED-b20140620_re-fv05.00.nc
+20091220_dm-INGV--RFVL-MFSs4b3-MED-b20140620_re-fv05.00.nc
+20091221_dm-INGV--RFVL-MFSs4b3-MED-b20140620_re-fv05.00.nc
+20091222_dm-INGV--RFVL-MFSs4b3-MED-b20140620_re-fv05.00.nc
+20091223_dm-INGV--RFVL-MFSs4b3-MED-b20140620_re-fv05.00.nc
+20091224_dm-INGV--RFVL-MFSs4b3-MED-b20140620_re-fv05.00.nc
+20091225_dm-INGV--RFVL-MFSs4b3-MED-b20140620_re-fv05.00.nc
+20091226_dm-INGV--RFVL-MFSs4b3-MED-b20140620_re-fv05.00.nc
+20091227_dm-INGV--RFVL-MFSs4b3-MED-b20140620_re-fv05.00.nc
+20091228_dm-INGV--RFVL-MFSs4b3-MED-b20140620_re-fv05.00.nc
+20091229_dm-INGV--RFVL-MFSs4b3-MED-b20140620_re-fv05.00.nc
+20091230_dm-INGV--RFVL-MFSs4b3-MED-b20140620_re-fv05.00.nc
+20091231_dm-INGV--RFVL-MFSs4b3-MED-b20140620_re-fv05.00.nc
+20100101_dm-INGV--RFVL-MFSs4b3-MED-b20140620_re-fv05.00.nc
+
+
+
+for file in `ls *RFVL*.nc`; do
+   #echo $file
+   ofile=`echo $file | cut -c-8`_vozocrtx.nc
+   Cmd="python jt_vto/sp.py --ifile $file --ifield=vozocrtx --oav='[0,10,50,100,500,1000,2000]'  --bm --ofile $ofile"
+   echo $Cmd
+   eval $Cmd
+   ofile=`echo $file | cut -c-8`_vomecrty.nc
+   Cmd="python jt_vto/sp.py --ifile $file --ifield=vomecrty --oav='[0,10,50,100,500,1000,2000]'  --bm --ofile $ofile"
+   echo $Cmd
+   eval $Cmd
+   done
+
+ls 20*vozocrtx.nc > 200912-vozocrtx_group.txt #req.: i6 get the month to process from the first 6 char il filename
+
+Cmd="echo 200912-vozocrtx_group.txt | python jt_vto/sp.py --ifile list --ifield=vozocrtx --oat='[\"i6\"]' --bm "  #file *txt trig the group processing and keep into consideration i6 flag
+echo $Cmd
+eval $Cmd
+
+ls 20*vomecrty.nc > 200912-vomecrty_group.txt
+
+Cmd="echo 200912-vomecrty_group.txt | python jt_vto/sp.py --ifile list --ifield=vomecrty --oat='[\"i6\"]' --bm "
+echo $Cmd
+eval $Cmd
+
+---------1
+
+
+
+
+
+melodies-wp6@sb-10-15-27-13 atomic]$ cat inputfiles
+/home/melodies-wp6/ncpi/scratch/atomic/last198701.nc
+/home/melodies-wp6/ncpi/scratch/atomic/last198702.nc
+/home/melodies-wp6/ncpi/scratch/atomic/last198703.nc
+
+VERTICAL LAYERS (Map v)
+sp.py --ifile $file --ifield=vozocrtx --oav='[0,10,50,100,500,1000,2000]' --bm --ofile $ofile
+
+TIME CONCATENATION - MAP TIMESERIES
+sp.py --ifile list --ifield=votemper --otc --bm < inputfiles
+
+TIMESERIES (Reduce om , Reduce oa * 2)
+sp.py --ifile list --ifield=votemper --otc -oao --bm < inputfiles
+
+
+
+EXAMPLE TO COMPUTE A DIREVED FIELD
+
+NB plugin available in jt_vto/comic/processor/
+
+./jt_vto/sp.py --ifile list --bm --ofc density --ofile 198701-mapcomic6.txt.nc < in-198701-mapcomic6.txt
+
+NB possible specify layers and geobox
+
+./jt_vto/sp.py --ifile list --ofc=density --oav='[0,10,50,100,500,1000,2000]' --ilonlat='[  [[-6, 10 ], [34,45]] ]' --bm < ../inputfiles
+
+#in-198701-mapcomic6.txt
+
+[melodies-wp6@sb-10-15-27-13 arc]$ cat in-*
+/home/melodies-wp6/ncpi/scratch/arc/dt/198701-mapcomic6.txt.out.nc
+/home/melodies-wp6/ncpi/scratch/arc/ds/198701-mapcomic6.txt.out.nc
+
+
+[melodies-wp6@sb-10-15-27-13 atomic]$ cat inputfiles2
+/home/melodies-wp6/ncpi/scratch/atomic/last198701.nc
+/home/melodies-wp6/ncpi/scratch/atomic/last198801.nc
+/home/melodies-wp6/ncpi/scratch/atomic/last198901.nc
+/home/melodies-wp6/ncpi/scratch/atomic/last199001.nc
+
+
+MONTHLY CLIMATOLOGY (Map ct)
+./jt_vto/sp.py --ifile list --ifield=votemper --oac < inputfiles2
+
+
+cat inputfiles3 
+/home/melodies-wp6/ncpi/scratch/atomic/01-mapcomic2.txt.out.nc
+/home/melodies-wp6/ncpi/scratch/atomic/02-mapcomic2.txt.out.nc
+/home/melodies-wp6/ncpi/scratch/atomic/03-mapcomic2.txt.out.nc
+/home/melodies-wp6/ncpi/scratch/atomic/04-mapcomic2.txt.out.nc
+/home/melodies-wp6/ncpi/scratch/atomic/05-mapcomic2.txt.out.nc
+/home/melodies-wp6/ncpi/scratch/atomic/06-mapcomic2.txt.out.nc
+/home/melodies-wp6/ncpi/scratch/atomic/07-mapcomic2.txt.out.nc
+/home/melodies-wp6/ncpi/scratch/atomic/08-mapcomic2.txt.out.nc
+/home/melodies-wp6/ncpi/scratch/atomic/09-mapcomic2.txt.out.nc
+/home/melodies-wp6/ncpi/scratch/atomic/10-mapcomic2.txt.out.nc
+/home/melodies-wp6/ncpi/scratch/atomic/11-mapcomic2.txt.out.nc
+/home/melodies-wp6/ncpi/scratch/atomic/12-mapcomic2.txt.out.nc
+
+ANNUAL CLIMATOLOGY (Reduce ct)
+./jt_vto/sp.py --ifile list --ifield=votemper --oac < inputfiles3
+
+

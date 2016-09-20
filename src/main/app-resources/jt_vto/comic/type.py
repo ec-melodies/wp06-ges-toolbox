@@ -2,6 +2,8 @@
 import numpy
 import sys
 
+from . import glob as sp_glob
+
 #http://stackoverflow.com/questions/2566412/find-nearest-value-in-numpy-array
 def find_nearest(array,value):
     idx = (numpy.abs(array-value)).argmin()
@@ -57,9 +59,55 @@ class Characteristic :
       self.LatCells=LatCells
       self.TimeCells=TimeCells
       # to haldle the averange in time
-      self.tCounter=1
+      self.tCounter=None
+      self.tCounterTotal=None     # in case the object is a value with weight, this is the total
       #self.tLastValidityTime=None
       #self.tCOSM=None
+      if self.TimeCells.ndim==1 :
+         self.ClimatologicalField=False
+      elif self.TimeCells.ndim==2 :
+         self.ClimatologicalField=True
+      else :
+         self.ClimatologicalField=True  #ERROR
+      self.AncillaryAttr=dict()
+
+   def set_weight(self,TimeRange) :
+      if TimeRange.shape[0] == 0 : # here is fast average without weight
+         self.tCounter=1
+      else :
+         import netCDF4
+         td=TimeRange[1]-TimeRange[0]   #hours in range
+         self.tCounterTotal=(td.seconds + td.days * 24 * 3600)/3600
+         #print 'sw',self.tCounterTotal,type(TimeRange[0])
+         #self.tCounter=1
+         TimeRangeMin=numpy.int64(numpy.rint(netCDF4.date2num(TimeRange[0],units='hours since 1900-01-01 00:00:00',calendar='standard')))
+         TimeRangeMax=numpy.int64(numpy.rint(netCDF4.date2num(TimeRange[1],units='hours since 1900-01-01 00:00:00',calendar='standard')))
+         #print self.TimeCells,TimeRangeMin,TimeRangeMax
+         if self.TimeCells[1] < TimeRangeMin or self.TimeCells[0] > TimeRangeMax : # no intersec
+            self.tCounter=0
+            self.COSM=numpy.ma.zeros( ( (TimeCells.size-1), (DepthLayers.size-1), (LatCells.size-1), (LonCells.size-1) ) ) # to be checked
+         else :
+            if self.TimeCells[0] < TimeRangeMin : self.TimeCells[0] = TimeRangeMin
+            if self.TimeCells[1] > TimeRangeMax : self.TimeCells[1] = TimeRangeMax
+            self.tCounter=self.TimeCells[1]-self.TimeCells[0]
+            #print numpy.ma.mean(self.COSM)
+            self.COSM=self.COSM*self.tCounter/self.tCounterTotal
+            #print numpy.ma.mean(self.COSM)
+         self.TimeCells[0]=TimeRangeMin
+         self.TimeCells[1]=TimeRangeMax
+         #print 'sw',self.TimeCells,self.tCounter,self.tCounterTotal
+
+   def SetAttributes(self,dAttr) :
+      for item in dAttr :
+         self.AncillaryAttr[item]=dAttr[item]
+
+   def setAsClimatologicalField(self) :
+      appo=self.TimeCells
+      #print type(self.TimeCells)
+      self.TimeCells=numpy.zeros((1,appo.size))
+      self.TimeCells[0]=appo
+      #print self.TimeCells
+      self.ClimatologicalField=True
 
 #   def masked_as(In,OutLayer=None,OutLonLat=None) :
 #      #print 'XXX',In.DepthLayers.size,In.COSM.shape
@@ -87,8 +135,38 @@ class Characteristic :
 #      return Characteristic(In.StandardName,In.VariableName,In.DepthLayers,In.LonCells,In.LatCells,In.TimeCells,ConcatenatioOfSpatialMaps=In.COSM)
 
    def IsAdiacent(self,Test) :
-      if self.TimeCells[-1] == Test.TimeCells[0] or self.TimeCells[0] == Test.TimeCells[1] :
-         return True
+      #print stc,ttc
+      if self.ClimatologicalField :
+         import netCDF4
+         import datetime
+         #print self.TimeCells,Test.TimeCells
+         stc=netCDF4.num2date(self.TimeCells,units='hours since 1900-01-01 00:00:00',calendar='standard')
+         ttc=netCDF4.num2date(Test.TimeCells,units='hours since 1900-01-01 00:00:00',calendar='standard')
+         print >>sys.stderr, 'WARNING 11 : leap year for climatology...'
+         #print 'stc',stc
+         #print 'ttc',ttc
+         #if (stc[0].year == ttc[0].year and stc[1].year == ttc[1].year ) : 
+            #stc[1].year=ttc[0].year
+
+         if stc[-1][1].month == 2 and stc[-1][1].day == 29 : il_day=28
+         else : il_day=stc[-1][1].day
+         nstc=datetime.datetime(ttc[0][0].year,stc[-1][1].month,il_day,stc[-1][1].hour,stc[-1][1].minute)
+         #print nstc,stc[0][0].year,ttc[-1][1].month,ttc[-1][1].day
+
+         if ttc[-1][1].month == 2 and ttc[-1][1].day == 29 : il_day=28
+         else : il_day=ttc[-1][1].day
+         nttc=datetime.datetime(stc[0][0].year,ttc[-1][1].month,il_day,ttc[-1][1].hour,ttc[-1][1].minute)
+
+         #print 'nstc',nstc
+         #print 'nttc',nttc
+#         if stc[0][0].year <= ttc[0][0].year and ( nstc==ttc[0][0] or nttc==stc[0][0] ) :
+         if ( nstc==ttc[0][0] and stc[0][0].year <= ttc[0][0].year ) or ( nttc==stc[0][0] and ttc[0][0].year <= stc[0][0].year ) :
+         #if self.TimeCells[0]+Test.TimeCells[1]-self.TimeCells[0]==Test.TimeCells[0] :
+            #print 'vero',stc[0][0].year,ttc[0][0].year
+            return True
+      else :
+         if self.TimeCells[-1] == Test.TimeCells[0] or self.TimeCells[0] == Test.TimeCells[1] :
+            return True
       return False 
 
    def mask_out_of(self,LonLatList) :
@@ -125,7 +203,7 @@ class Characteristic :
          self.LonCells=numpy.array([ self.LonCells[0] , self.LonCells[self.LonCells.size-1] ])
          self.LatCells=numpy.array([ self.LatCells[0] , self.LatCells[self.LatCells.size-1] ])
 
-   def operator_tAdd(self, In , TimeAverage=True) :
+   def operator_tAdd(self, In , TimeAverage=False) :
       #self.COSM+=In.COSM
       #self.tCounter+=1
       #print "WARNING 7 : can't handle average over time in some cases"
@@ -148,12 +226,28 @@ class Characteristic :
 
       if TimeAverage :
          print >>sys.stderr, "WARNING 7 : can't handle average over time in some cases : i.e. gap, different weights, ..."
-         self.tCounter+=1
-         #if self.tLastValidityTime is None : self.tLastValidityTime=In.TimeCells
-         if self.TimeCells[1] < In.TimeCells[1] : self.TimeCells[1]=In.TimeCells[1]
-         if self.TimeCells[0] > In.TimeCells[0] : self.TimeCells[0]=In.TimeCells[0]
-         #print 'TUU',self.tLastValidityTime
-         self.COSM+=app
+         if self.tCounterTotal is None : # here is fast average without weight
+            self.tCounter+=1
+            #if self.tLastValidityTime is None : self.tLastValidityTime=In.TimeCells
+            if self.ClimatologicalField :
+               if self.TimeCells[0][1] < In.TimeCells[0][1] : self.TimeCells[0][1]=In.TimeCells[0][1]
+               if self.TimeCells[0][0] > In.TimeCells[0][0] : self.TimeCells[0][0]=In.TimeCells[0][0]
+            else :
+               if self.TimeCells[1] < In.TimeCells[1] : self.TimeCells[1]=In.TimeCells[1]
+               if self.TimeCells[0] > In.TimeCells[0] : self.TimeCells[0]=In.TimeCells[0]
+            #print 'TUU',self.tLastValidityTime
+            self.COSM+=app
+         else :  # here is with weight
+            if not (In.TimeCells[1] < self.TimeCells[0] or In.TimeCells[0] > self.TimeCells[1] ) : # no intersec
+               MyTimeCellsMin=In.TimeCells[0]
+               MyTimeCellsMax=In.TimeCells[1]
+               if MyTimeCellsMin < self.TimeCells[0] : MyTimeCellsMin = self.TimeCells[0]
+               if MyTimeCellsMax > self.TimeCells[1] : MyTimeCellsMax = self.TimeCells[1]
+               MytCounter=MyTimeCellsMax-MyTimeCellsMin
+               #print numpy.ma.mean(self.COSM),numpy.ma.mean(app)
+               self.COSM+=app*MytCounter/self.tCounterTotal
+               self.tCounter+=MytCounter
+               #print numpy.ma.mean(self.COSM)
       else :
          #print 'ABC',self.COSM.shape,app.shape
          #print 'ABCtc',self.TimeCells,type(self.TimeCells),self.TimeCells.shape
@@ -166,32 +260,60 @@ class Characteristic :
 #            #print 'AVF1',type(self.COSM),self.COSM.count()
 #         else :
             #print 'AVF2',type(app),app.count()
-         if self.TimeCells[-1] == In.TimeCells[0] :
-            self.TimeCells=numpy.concatenate((self.TimeCells,[In.TimeCells[1]]),axis=0)
-            #print 'SHA :',self.COSM.shape,app.shape
-            self.COSM=numpy.ma.concatenate((self.COSM,app),axis=0)
-         elif self.TimeCells[0] == In.TimeCells[1] :
-            self.TimeCells=numpy.concatenate(([In.TimeCells[0]],self.TimeCells),axis=0)
-            self.COSM=numpy.ma.concatenate((app,self.COSM),axis=0)
-            #print 'AVF3',type(self.COSM),self.COSM.count()
-         else :
-            print >>sys.stderr, 'ERROR 2 : not possible to concatenate'
+
+         if self.ClimatologicalField :
+            import netCDF4
+            import datetime
+            #print self.TimeCells,Test.TimeCells
+            stc=netCDF4.num2date(self.TimeCells,units='hours since 1900-01-01 00:00:00',calendar='standard')
+            ttc=netCDF4.num2date(In.TimeCells,units='hours since 1900-01-01 00:00:00',calendar='standard')
+            #nstc=datetime.datetime(ttc[0].year,stc[1].month,stc[1].day,stc[1].hour,stc[1].minute)
+            #nttc=datetime.datetime(stc[0].year,ttc[1].month,ttc[1].day,ttc[1].hour,ttc[1].minute)
+            if stc[-1][1].month == 2 and stc[-1][1].day == 29 : il_day=28
+            else : il_day=stc[-1][1].day
+            nstc=datetime.datetime(ttc[0][0].year,stc[-1][1].month,il_day,stc[-1][1].hour,stc[-1][1].minute)
+            if ttc[-1][1].month == 2 and ttc[-1][1].day == 29 : il_day=28
+            else : il_day=ttc[-1][1].day
+            nttc=datetime.datetime(stc[0][0].year,ttc[-1][1].month,il_day,ttc[-1][1].hour,ttc[-1][1].minute)
+            if nstc==ttc[0][0] and stc[0][0].year <= ttc[0][0].year :
+               self.TimeCells=numpy.concatenate((self.TimeCells,In.TimeCells),axis=0)
+               self.COSM=numpy.ma.concatenate((self.COSM,app),axis=0)
+            elif nttc==stc[0][0] and ttc[0][0].year <= stc[0][0].year :
+               self.TimeCells=numpy.concatenate((In.TimeCells,self.TimeCells),axis=0)
+               self.COSM=numpy.ma.concatenate((app,self.COSM),axis=0)
+            else : print >>sys.stderr, 'ERROR 3 : not possible to concatenate'
+            #print self.TimeCells
+
+         #if self.ClimatologicalField :
+         #   if self.TimeCells[0]+In.TimeCells[1]-self.TimeCells[0]==In.TimeCells[0] :
+         #      self.TimeCells=numpy.concatenate((self.TimeCells,[In.TimeCells[1]]),axis=0)
+         #      self.COSM=numpy.ma.concatenate((self.COSM,app),axis=0) 
+         else : 
+            if self.TimeCells[-1] == In.TimeCells[0] :
+               self.TimeCells=numpy.concatenate((self.TimeCells,[In.TimeCells[1]]),axis=0)
+               #print 'SHA :',self.COSM.shape,app.shape
+               self.COSM=numpy.ma.concatenate((self.COSM,app),axis=0)
+            elif self.TimeCells[0] == In.TimeCells[1] :
+               self.TimeCells=numpy.concatenate(([In.TimeCells[0]],self.TimeCells),axis=0)
+               self.COSM=numpy.ma.concatenate((app,self.COSM),axis=0)
+               #print 'AVF3',type(self.COSM),self.COSM.count()
+            else :
+               print >>sys.stderr, 'ERROR 2 : not possible to concatenate'
       #print 'AVF',type(self.COSM),self.COSM.count()
       #print self.tLastValidityTime
 
    def operator_tClose(self) :
-      self.COSM/=self.tCounter
+      if self.tCounterTotal is None : # here is fast average without weight
+         self.COSM/=self.tCounter
       #print 'XXX',self.tCounter
       #self.TimeCells=self.tLastValidityTime
-      self.tCounter=1
+      #self.tCounter=1
       #print self.TimeCells
+      self.tCounter=None
+      self.tCounterTotal=None
 
 
 
-
-import sp_glob 
-
-#verbose=False
 
 def FindLowerTop(LayerIn,LayerOutLower,LayerOutTop) :
    i=0

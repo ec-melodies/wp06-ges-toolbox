@@ -1,0 +1,186 @@
+This program is an utility to produce and analyze simple benchmarking information in a distributed execution environment.
+
+In developing phase, after importing sp_bm.py, some functions will be available to produce benchmarking information. 
+Such information will be printed on standard out and saved in output file bm.txt .
+
+On command line this utility can show the benchmarking information in one file bm.txt, or calculate and show the cumulative benchmarking information from many bm.txt , 
+in order to have the overall information for example after the execution of many instances of the same program in a parallel or distribute execution environment.
+
+To have an idea of what kind of information it cares about, the output of the program looks like this :
+
+---------1
+Input Data
+|  byte in memory  :  7107476376
+|  # grid point    :  1776869094
+`  # sea point     :  506354394
+
+Output Data
+|  byte in memory  :  1496310816
+|  # grid point    :  187038852
+`  # sea point     :  59180576
+
+Max Memory         :  243015680
+
+Init         : (ms) 19865 - 1 %
+i/o read     : (ms) 102390 - 8 %
+computation  : (ms) 185272 - 14 %
+i/o write    : (ms) 114120 - 9 %
+benchmarking : (ms) 66282 - 5 %
+wrap         : (ms) 850529 - 64 %
+tot          :  (s) 1338.458
+---------1
+
+
+
+
+USAGE IN DEVELOPPING
+
+Any python program can import this module in order to produce simple benchmarking information.
+
+After 'import sp_bm' , call to relevant functions have to be inserted in the program code :
+
+* bm_setup()
+to initialize the data structure; when the program starts, this call must happen as soon as possible
+
+* bm_update(type,data=None)
+the call to this function will update the benchmarking information ; the delta time between the previous call (or bm_init) and the actual call will increment the time counter 'type' ; 
+possible values for 'type' are defined in sp_bm.py and are : 
+- BM_INIT -> to increment the time counter for the program initialization
+- BM_READ -> to increment the time counter for read task
+- BM_WRITE -> to increment the time counter for write task
+- BM_COMPUTE -> to increment the time counter for computation task
+- BM_WRAP -> to increment the time counter for wrapping task
+The programmer is in charge to insert the proper call/parameter in the program, also on the basis of the need and kind of analysis to be done.
+
+* bm_close()
+the call to this function must happen at the end of the program ; it will :
+- show the benchmarking information in standard output 
+- save the benchmarking information in file bm.txt in current directory (json file)
+ 
+
+
+
+
+SYNTAX ON COMMAND LINE
+
+A general call will look like :
+
+find ../../../[path]/../../ -iname bm.txt | python [path]/bmmng.py
+
+
+
+
+
+EXAMPLE ON COMMAND LINE
+
+[melodies-wp6@sb-10-15-27-13 sp]$ find ../../../../../toolbox-test/ -iname bm.txt
+../../../../../toolbox-test/0000016-141201235331088-oozie-oozi-W/node_t_198702/data/bm.txt
+../../../../../toolbox-test/0000016-141201235331088-oozie-oozi-W/node_t_198708/data/bm.txt
+../../../../../toolbox-test/0000016-141201235331088-oozie-oozi-W/node_t_198709/data/bm.txt
+../../../../../toolbox-test/0000016-141201235331088-oozie-oozi-W/node_t_198706/data/bm.txt
+../../../../../toolbox-test/0000016-141201235331088-oozie-oozi-W/node_t_198701/data/bm.txt
+../../../../../toolbox-test/0000016-141201235331088-oozie-oozi-W/node_t_198711/data/bm.txt
+../../../../../toolbox-test/0000016-141201235331088-oozie-oozi-W/node_t_198705/data/bm.txt
+../../../../../toolbox-test/0000016-141201235331088-oozie-oozi-W/node_t_198704/data/bm.txt
+../../../../../toolbox-test/0000016-141201235331088-oozie-oozi-W/node_o/data/bm.txt
+../../../../../toolbox-test/0000016-141201235331088-oozie-oozi-W/node_t_198710/data/bm.txt
+../../../../../toolbox-test/0000016-141201235331088-oozie-oozi-W/node_t_198703/data/bm.txt
+../../../../../toolbox-test/0000016-141201235331088-oozie-oozi-W/node_v/data/bm.txt
+../../../../../toolbox-test/0000016-141201235331088-oozie-oozi-W/node_t_198707/data/bm.txt
+../../../../../toolbox-test/0000016-141201235331088-oozie-oozi-W/node_t_198712/data/bm.txt
+../../../../../toolbox-test/0000015-141201235331088-oozie-oozi-W/node_t_198702/data/bm.txt
+../../../../../toolbox-test/0000015-141201235331088-oozie-oozi-W/node_t_198708/data/bm.txt
+../../../../../toolbox-test/0000015-141201235331088-oozie-oozi-W/node_t_198709/data/bm.txt
+../../../../../toolbox-test/0000015-141201235331088-oozie-oozi-W/node_t_198706/data/bm.txt
+../../../../../toolbox-test/0000015-141201235331088-oozie-oozi-W/node_t_198701/data/bm.txt
+../../../../../toolbox-test/0000015-141201235331088-oozie-oozi-W/node_t_198711/data/bm.txt
+../../../../../toolbox-test/0000015-141201235331088-oozie-oozi-W/node_t_198705/data/bm.txt
+../../../../../toolbox-test/0000015-141201235331088-oozie-oozi-W/node_t_198704/data/bm.txt
+../../../../../toolbox-test/0000015-141201235331088-oozie-oozi-W/node_o/data/bm.txt
+../../../../../toolbox-test/0000015-141201235331088-oozie-oozi-W/node_t_198710/data/bm.txt
+../../../../../toolbox-test/0000015-141201235331088-oozie-oozi-W/node_t_198703/data/bm.txt
+../../../../../toolbox-test/0000015-141201235331088-oozie-oozi-W/node_v/data/bm.txt
+../../../../../toolbox-test/0000015-141201235331088-oozie-oozi-W/node_t_198707/data/bm.txt
+../../../../../toolbox-test/0000015-141201235331088-oozie-oozi-W/node_t_198712/data/bm.txt
+
+
+[melodies-wp6@sb-10-15-27-13 sp]$ echo ../../../../../toolbox-test/0000016-141201235331088-oozie-oozi-W/node_v/data/bm.txt | python bmmng.py
+../../../../../toolbox-test/0000016-141201235331088-oozie-oozi-W/node_v/data/bm.txt
+
+bm---------------
+
+Input Data
+|  byte in memory  :  7107476376
+|  # grid point    :  1776869094
+`  # sea point     :  506354394
+
+Output Data
+|  byte in memory  :  1496310816
+|  # grid point    :  187038852
+`  # sea point     :  59180576
+
+Max Memory         :  243015680
+
+Init         : (ms) 19865 - 1 %
+i/o read     : (ms) 102390 - 8 %
+computation  : (ms) 185272 - 14 %
+i/o write    : (ms) 114120 - 9 %
+benchmarking : (ms) 66282 - 5 %
+wrap         : (ms) 850529 - 64 %
+tot          :  (s) 1338.458
+
+
+
+[melodies-wp6@sb-10-15-27-13 sp]$ find ../../../../../toolbox-test/ -iname bm.txt | python bmmng.py 
+../../../../../toolbox-test/0000016-141201235331088-oozie-oozi-W/node_t_198702/data/bm.txt
+../../../../../toolbox-test/0000016-141201235331088-oozie-oozi-W/node_t_198708/data/bm.txt
+../../../../../toolbox-test/0000016-141201235331088-oozie-oozi-W/node_t_198709/data/bm.txt
+../../../../../toolbox-test/0000016-141201235331088-oozie-oozi-W/node_t_198706/data/bm.txt
+../../../../../toolbox-test/0000016-141201235331088-oozie-oozi-W/node_t_198701/data/bm.txt
+../../../../../toolbox-test/0000016-141201235331088-oozie-oozi-W/node_t_198711/data/bm.txt
+../../../../../toolbox-test/0000016-141201235331088-oozie-oozi-W/node_t_198705/data/bm.txt
+../../../../../toolbox-test/0000016-141201235331088-oozie-oozi-W/node_t_198704/data/bm.txt
+../../../../../toolbox-test/0000016-141201235331088-oozie-oozi-W/node_o/data/bm.txt
+../../../../../toolbox-test/0000016-141201235331088-oozie-oozi-W/node_t_198710/data/bm.txt
+../../../../../toolbox-test/0000016-141201235331088-oozie-oozi-W/node_t_198703/data/bm.txt
+../../../../../toolbox-test/0000016-141201235331088-oozie-oozi-W/node_v/data/bm.txt
+../../../../../toolbox-test/0000016-141201235331088-oozie-oozi-W/node_t_198707/data/bm.txt
+../../../../../toolbox-test/0000016-141201235331088-oozie-oozi-W/node_t_198712/data/bm.txt
+../../../../../toolbox-test/0000015-141201235331088-oozie-oozi-W/node_t_198702/data/bm.txt
+../../../../../toolbox-test/0000015-141201235331088-oozie-oozi-W/node_t_198708/data/bm.txt
+../../../../../toolbox-test/0000015-141201235331088-oozie-oozi-W/node_t_198709/data/bm.txt
+../../../../../toolbox-test/0000015-141201235331088-oozie-oozi-W/node_t_198706/data/bm.txt
+../../../../../toolbox-test/0000015-141201235331088-oozie-oozi-W/node_t_198701/data/bm.txt
+../../../../../toolbox-test/0000015-141201235331088-oozie-oozi-W/node_t_198711/data/bm.txt
+../../../../../toolbox-test/0000015-141201235331088-oozie-oozi-W/node_t_198705/data/bm.txt
+../../../../../toolbox-test/0000015-141201235331088-oozie-oozi-W/node_t_198704/data/bm.txt
+../../../../../toolbox-test/0000015-141201235331088-oozie-oozi-W/node_o/data/bm.txt
+../../../../../toolbox-test/0000015-141201235331088-oozie-oozi-W/node_t_198710/data/bm.txt
+../../../../../toolbox-test/0000015-141201235331088-oozie-oozi-W/node_t_198703/data/bm.txt
+../../../../../toolbox-test/0000015-141201235331088-oozie-oozi-W/node_v/data/bm.txt
+../../../../../toolbox-test/0000015-141201235331088-oozie-oozi-W/node_t_198707/data/bm.txt
+../../../../../toolbox-test/0000015-141201235331088-oozie-oozi-W/node_t_198712/data/bm.txt
+
+bm---------------
+
+Input Data
+|  byte in memory  :  8677393920
+|  # grid point    :  2169348480
+`  # sea point     :  629791084
+
+Output Data
+|  byte in memory  :  1549241472
+|  # grid point    :  199835664
+`  # sea point     :  63202980
+
+Max Memory         :  3438768128
+
+Init         : (ms) 431222 - 11 %
+i/o read     : (ms) 152746 - 4 %
+computation  : (ms) 200898 - 5 %
+i/o write    : (ms) 136495 - 3 %
+benchmarking : (ms) 67789 - 2 %
+wrap         : (ms) 2959431 - 75 %
+tot          :  (s) 3948.581
+
+

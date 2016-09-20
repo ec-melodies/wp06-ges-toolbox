@@ -1,0 +1,18 @@
+execution example :
+time cat inputfiles9 | ./wfgen/workflow.sh > result.txt &
+
+/home/melodies-wp6/ncpi/scratch/node_o_m/out6.nc
+
+real	1m33.033s
+user	1m22.173s
+sys	0m5.689s
+
+
+script to launch by command 'at' :
+
+---
+cd /tmp
+date &> result.txt
+time cat inputfiles.s3.yr1987-2012 | wfgen/workflow.sh &> result.txt
+date &> result.txt
+---

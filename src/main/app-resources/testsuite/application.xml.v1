@@ -1,0 +1,112 @@
+<application id="wp6_app_id" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<jobTemplates>
+<jobTemplate id="jt_v">
+<streamingExecutable>/application/jt_vto/run.py</streamingExecutable>
+<defaultParameters>
+<parameter id="InFile">list</parameter>
+<parameter abstract="Parameter" id="Var" scope="runtime" title="Parameter">votemper</parameter>
+<parameter abstract="default None" id="LonLat" scope="runtime" title="WorkingArea" />
+<parameter id="OutFile">.out.nc</parameter>
+<parameter abstract="default [0,10,50,100,500,1000,2000]" id="OutLayer" scope="runtime" title="DepthLayers">[0,10,50,100,500,1000,2000]</parameter>
+<parameter id="bm">True</parameter>
+<parameter id="iClean">True</parameter>
+</defaultParameters>
+</jobTemplate>
+<jobTemplate id="jt_g">
+<streamingExecutable>/application/jt_vto/node_g.py</streamingExecutable>
+<defaultParameters>
+<parameter id="iKey">.nc$</parameter>
+<parameter id="oKey">None</parameter>
+</defaultParameters>
+<defaultJobconf>
+<property id="ciop.job.max.tasks">1</property>
+</defaultJobconf>
+</jobTemplate>
+<jobTemplate id="jt_t">
+<streamingExecutable>/application/jt_vto/run.py</streamingExecutable>
+<defaultParameters>
+<parameter id="InFile">list</parameter>
+<parameter id="iKey">\.txt$</parameter>
+<parameter id="Var">votemper</parameter>
+<parameter id="OutFile">.out.nc</parameter>
+<parameter id="oat">True</parameter>
+<parameter id="bm">True</parameter>
+<parameter id="s">True</parameter>
+<parameter id="iClean">True</parameter>
+</defaultParameters>
+</jobTemplate>
+<jobTemplate id="jt_o">
+<streamingExecutable>/application/jt_vto/run.py</streamingExecutable>
+<defaultParameters>
+<parameter id="InFile">list</parameter>
+<parameter id="Var">votemper</parameter>
+<parameter id="oao">True</parameter>
+<parameter id="otc">True</parameter>
+<parameter id="bm">True</parameter>
+<parameter id="iClean">True</parameter>
+</defaultParameters>
+<defaultJobconf>
+<property id="ciop.job.max.tasks">1</property>
+</defaultJobconf>
+</jobTemplate>
+</jobTemplates>
+<workflow abstract="Toolbox parameters" id="wp6_wf_id" title="WP6 workflow 1987 01 2012 12">
+<workflowVersion>1.0</workflowVersion>
+<node id="vg_m_v">
+<job id="jt_v" /><sources>
+<source refid="file:urls">/application/inputfiles</source>
+</sources>
+<parameters>
+</parameters>
+</node>
+<node id="vg_r_gm">
+<job id="jt_g" /><sources>
+<source refid="wf:node">vg_m_v</source>
+</sources>
+<parameters>
+<parameter id="GroupRange">6</parameter>
+</parameters>
+</node>
+<node id="mtmg_m_tm">
+<job id="jt_t" /><sources>
+<source refid="wf:node">vg_r_gm</source>
+</sources>
+<parameters>
+</parameters>
+</node>
+<node id="mtmg_r_ga">
+<job id="jt_g" /><sources>
+<source refid="wf:node">mtmg_m_tm</source>
+</sources>
+<parameters>
+<parameter id="GroupRange">4</parameter>
+</parameters>
+</node>
+<node id="mtmg_r_om">
+<job id="jt_o" /><sources>
+<source refid="wf:node">mtmg_m_tm</source>
+</sources>
+<parameters>
+<parameter id="iKey">\.nc$</parameter>
+<parameter id="OutFile">out6.nc</parameter>
+</parameters>
+</node>
+<node id="mty_m_ta">
+<job id="jt_t" /><sources>
+<source refid="wf:node">mtmg_r_ga</source>
+</sources>
+<parameters>
+</parameters>
+</node>
+<node id="mty_r_oa">
+<job id="jt_o" /><sources>
+<source refid="wf:node">mtmg_r_om</source>
+<source refid="wf:node">mty_m_ta</source>
+</sources>
+<parameters>
+<parameter id="iKey">mapcomic4(.*)(\.nc$)</parameter>
+<parameter id="OutFile">out4.nc</parameter>
+</parameters>
+</node>
+</workflow>
+</application>

@@ -1,0 +1,16 @@
+[melodies-wp6@sb-10-15-27-13 jt_vto]$ cat ../inputfiles 
+/home/melodies-wp6/ncpi/scratch/derived/19870101_dm-INGV--PSAL-MFSs4b3-MED-b20130712_re-fv04.00.nc
+/home/melodies-wp6/ncpi/scratch/derived/19870101_dm-INGV--TEMP-MFSs4b3-MED-b20130712_re-fv04.00.nc
+/home/melodies-wp6/ncpi/scratch/derived/19870201_dm-INGV--PSAL-MFSs4b3-MED-b20130712_re-fv04.00.nc
+/home/melodies-wp6/ncpi/scratch/derived/19870201_dm-INGV--TEMP-MFSs4b3-MED-b20130712_re-fv04.00.nc
+
+[melodies-wp6@sb-10-15-27-13 jt_vto]$ $PWD/node_g.py none 66 list_month < ../inputfiles
+
+[melodies-wp6@sb-10-15-27-13 jt_vto]$ cat 198701-mapcomic66.txt
+/home/melodies-wp6/ncpi/scratch/derived/19870101_dm-INGV--PSAL-MFSs4b3-MED-b20130712_re-fv04.00.nc
+/home/melodies-wp6/ncpi/scratch/derived/19870101_dm-INGV--TEMP-MFSs4b3-MED-b20130712_re-fv04.00.nc
+
+[melodies-wp6@sb-10-15-27-13 jt_vto]$ cat 198702-mapcomic66.txt
+/home/melodies-wp6/ncpi/scratch/derived/19870201_dm-INGV--PSAL-MFSs4b3-MED-b20130712_re-fv04.00.nc
+/home/melodies-wp6/ncpi/scratch/derived/19870201_dm-INGV--TEMP-MFSs4b3-MED-b20130712_re-fv04.00.nc
+

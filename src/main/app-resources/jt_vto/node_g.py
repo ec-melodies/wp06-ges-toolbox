@@ -7,27 +7,10 @@ mymr=mr.mr()
 
 # import the ciop functtons (e.g. copy, log)
 #sys.path.append('/usr/lib/ciop/python/')    #classic python, not anaconda
-import cioppy            #as ciop #classic python, not anaconda
-ciop = cioppy.Cioppy()   # anaconda
-
-#def GetLine(keyPattern=None) :
-#   import sys
-#   import re
-#   a=sys.stdin.readline().replace("\r","").replace("\n","").replace(" ","").replace("\t","")
-#   while a != '' :
-#      #print "checking ",a[-3:]+'f'
-#      good=False
-#
-#      if keyPattern is None : good=True
-#      elif re.search(keyPattern,a) is not None : good=True
-#
-#      if good : return a
-#      print >>sys.stderr, "Dump ",a
-#      a=sys.stdin.readline().replace("\r","").replace("\n","").replace(" ","").replace("\t","")
-#
-#   return False
-
-
+try :
+   import cioppy            #as ciop #classic python, not anaconda
+   ciop = cioppy.Cioppy()   # anaconda
+except : pass
 
 lib=dict()
 
@@ -41,18 +24,44 @@ def GiveOutFile(myGroup,GroupRange,lib,Dump=False,key=None) :
       if Dump :
          print >>sys.stderr, "Dump "+os.getcwd()+'/'+out_file_name
       else :
+         print >>sys.stderr, "Publishing "+os.getcwd()+'/'+out_file_name
          try :
-            print >>sys.stderr, "Publishing output by ciop", out_file_name
+            print >>sys.stderr, "Publishing output by ciop "+os.getcwd()+'/'+out_file_name
             ciop.publish(os.environ['TMPDIR']+'/'+out_file_name)
-         except : print >>sys.stderr, "Issue to plublish by ciop"
+         except : print >>sys.stderr, "Issue to plublish by ciop "+os.getcwd()+'/'+out_file_name
          #print os.getcwd()+'/'+out_file_name
+         print >>sys.stderr, "Publishing output by mr module"
          if key is None : mymr.PushRecord(os.getcwd()+'/'+out_file_name)
-         else : mymr.PushRecord(os.getcwd()+'/'+out_file_name,(key,))
+         else : 
+            mymr.PushRecord(os.getcwd()+'/'+out_file_name,(key,))
          sys.stdout.flush()
+
+def UpdateList(InputPathFileName,myGroup,lib,GroupRange,oKey) :
+   if myGroup in lib.keys() :
+      list_files=lib[myGroup]
+      list_files.append(InputPathFileName)
+   else :
+      list_files=list()
+      list_files.append(InputPathFileName)
+      lib[myGroup]=list_files
+
+   #to close and publish soon
+   DoIt=False
+   if GroupRange==6 :
+      from calendar import monthrange
+      #print len(lib[myGroup]),monthrange(int(myGroup[0:4]),int(myGroup[4:6]))[1] , monthrange(int(myGroup[0:4]),int(myGroup[4:6]))[1]+1
+      if len(lib[myGroup]) == monthrange(int(myGroup[0:4]),int(myGroup[4:6]))[1]+1 : DoIt=True
+   elif GroupRange==4 : #here is GroupRange=4
+      #nyyyy=365
+      #if isleap(int(myGroup[0:4])) : nyyyy=366
+      if len(lib[myGroup]) == 12 : DoIt=True
+   if DoIt :
+      GiveOutFile(myGroup,GroupRange,lib,key=oKey)
+      del lib[myGroup]
 
 
 def main():
-   from calendar import monthrange,isleap
+   #from calendar import monthrange,isleap
    try : 
       os.chdir(os.environ['TMPDIR'])
       print >>sys.stderr, "Change dir to", os.environ['TMPDIR'] 
@@ -71,55 +80,55 @@ def main():
       if oKey == 'None' : oKey=None
    except : 
       iKey=sys.argv[1]
-      GroupRange=int(sys.argv[2]) #6
+      GroupRange=int(sys.argv[2]) # default 6
+#      GroupTag=sys.argv[3]
       oKey=sys.argv[3]
+
+   if iKey=='None' or iKey=='none' : iKey=None
+
    print >>sys.stderr, "iKey: ",iKey
-   print >>sys.stderr, "GroupRange (6-> month,4->year):"+str(GroupRange)
+   print >>sys.stderr, "GroupRange (6->year_month,4->year,2->month,66->year_month without completeness check):"+str(GroupRange)
+#   print >>sys.stderr, "GroupTag: ",GroupTag
    print >>sys.stderr, "oKey: ",oKey
 
    #InputPathFileName=GetLine(iKey)
    InputPathFileName=mymr.PullValue(iKey)
    while InputPathFileName :
+      myGroup6=None
+      import re
       InputFileName=os.path.basename(InputPathFileName)      
-      myGroup=InputFileName[0:GroupRange]
-      if myGroup in lib.keys() :
-         list_files=lib[myGroup]
-         list_files.append(InputPathFileName)
+      if GroupRange==2 :
+         myGroup=InputFileName[4:6] 
+      elif GroupRange==66 :
+         myGroup=InputFileName[0:6]
       else :
-         list_files=list()
-         list_files.append(InputPathFileName)
-         lib[myGroup]=list_files
+         myGroup=InputFileName[0:GroupRange]
+         if GroupRange==6 and InputFileName[GroupRange:GroupRange+2]=='01' : 
+            import datetime
+            a=datetime.datetime(int(InputFileName[0:4]),int(InputFileName[4:6]),1)
+            b=a-datetime.timedelta(1)
+            myGroup6=b.strftime("%Y%m")  #to catch the previous calendar month when yyyymm01
+
       print >>sys.stderr, "Input ",InputPathFileName
+      UpdateList(InputPathFileName,myGroup,lib,GroupRange,oKey)
       print >>sys.stderr, myGroup,InputFileName
-      DoIt=False
-      if GroupRange==6 :
-         if len(lib[myGroup]) == monthrange(int(myGroup[0:4]),int(myGroup[4:6]))[1] : DoIt=True
-      else : #here is GroupRange=4
-         #nyyyy=365
-         #if isleap(int(myGroup[0:4])) : nyyyy=366
-         if len(lib[myGroup]) == 12 : DoIt=True
-      if DoIt : 
-         GiveOutFile(myGroup,GroupRange,lib,key=oKey)
-         del lib[myGroup]
-      #InputPathFileName=GetLine(iKey)
+      if GroupRange==6 and myGroup6 is not None : 
+         UpdateList(InputPathFileName,myGroup6,lib,GroupRange,oKey)
+         print >>sys.stderr, myGroup6,InputFileName
+
       InputPathFileName=mymr.PullValue(iKey)
 
+   #final closure and publication
    for myGroup in lib.keys() :
-      GiveOutFile(myGroup,GroupRange,lib,Dump=True)
-      #out_file_name=myGroup+"-mapcomic"+str(GroupRange)+".txt"
-      #out_file = open(out_file_name,"w")
-      #print >>sys.stderr, out_file_name
-      #for InputPathFileName in lib[myGroup] :
-      #   out_file.write(InputPathFileName+"\n")
-      #out_file.close()
-      #try : 
-      #   print >>sys.stderr, "Publishing by ciop", out_file_name
-      #   ciop.publish(os.environ['TMPDIR']+'/'+out_file_name)
-      #except : print >>sys.stderr, "Issue to plublish by ciop"
-      #print os.getcwd()+'/'+out_file_name
+      if GroupRange==2 or GroupRange==66 :
+         GiveOutFile(myGroup,GroupRange,lib,key=oKey)
+      else :
+         GiveOutFile(myGroup,GroupRange,lib,Dump=True)
+
 
 if __name__ == "__main__":
-   import sp_bm
+   #import sp_bm
+   from comic import bmmng as sp_bm
    sp_bm.bm_setup()
    main()
    sp_bm.bm_update(sp_bm.BM_WRAP)

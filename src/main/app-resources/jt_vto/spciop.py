@@ -1,13 +1,14 @@
 #!/opt/anaconda/bin/python
 
-import sp_bm
+#import sp_bm
+import comic
+from comic import bmmng as sp_bm
 import sp
 
 #############   CIOP FRONT END   
 
-import site
+#import site
 import os
-#import sys
 
 # import the ciop functtons (e.g. copy, log)
 #sys.path.append('/usr/lib/ciop/python/')    #classic python, not anaconda
@@ -19,18 +20,15 @@ def CheckNone(text) :
       return None
    return text
 
-def CheckNoneOrRange(text) :
+def CheckNoneOrRange(text,Time=False) :
    if ( text == 'None' ) or ( text == '' ) :
       return None
-   return sp.ParseRange(text)
+   return sp.ParseRange(text,Time)
 
 def GetInput(InputFileName) :
    ciop.log('INFO', 'input: ' + InputFileName)
    #print 'Input File Name :',InputFileName
-   import sys
-   print >>sys.stderr, 'dbdbdbdb gi InputFileName',InputFileName
    res = ciop.copy(InputFileName, os.environ['TMPDIR'])
-   print >>sys.stderr, 'dbdbdbdb gi res',res
    # LocalInputFileName = os.path.basename(res[0].rstrip('\n')) #classic python, not anaconda
    LocalInputFileName = os.path.basename(res) # anaconda
    if opt['bm'] : sp_bm.bm_update(sp_bm.BM_WRAP)
@@ -78,7 +76,8 @@ def main():
 
    os.chdir(os.environ['TMPDIR'])
 
-   print "sp-ciop.py"
+   print "spciop.py"
+   print "available processors :",comic.processor.dict
 
    #opt=dict()
    opt['InFile']=ciop.getparam('InFile')   #MANDATORY
@@ -91,9 +90,8 @@ def main():
    try : opt['iClean']=ciop.getparam('iClean')
    except : opt['iClean']=False
    opt['OutFile']=CheckNone(ciop.getparam('OutFile'))   #MANDATORY
-   try : opt['oat']=(ciop.getparam('oat')=='True')
-   except : opt['oat']=False
-   if not opt['oat'] : opt['oat']=None
+   try : opt['OutTRange']=CheckNoneOrRange(ciop.getparam('oat'),Time=True)
+   except : opt['OutTRange']=None
    try : opt['OutLayer']=CheckNoneOrRange(ciop.getparam('OutLayer'))
    except : opt['OutLayer']=None
    try : opt['oao']=(ciop.getparam('oao')=='True')     
@@ -101,32 +99,54 @@ def main():
    if not opt['oao'] : opt['oao']=None
    try : opt['otc']=(ciop.getparam('otc')=='True')
    except : opt['otc']=False
+   try : opt['oac']=(ciop.getparam('oac')=='True')
+   except : opt['oac']=False
+   if not opt['oac'] : opt['oac']=None
+   try : opt['OutField']=CheckNone(ciop.getparam('OutField'))
+   except : opt['OutField']=None
    try : opt['bm']=(ciop.getparam('bm')=='True')
    except : opt['bm']=False
    try : opt['s']=(ciop.getparam('s')=='True')
    except : opt['s']=False
+   try : opt['AttrStr']=CheckNone(ciop.getparam('AttrStr'))
+   except : opt['AttrStr']=None
+   try : opt['OutField']=CheckNone(ciop.getparam('OutField'))
+   except : opt['OutField']=None
    opt['v']=False
 
+   if opt['OutField'] is not None :
+      print "WARNING : forcing the input variable"
+      opt['Var']=comic.processor.dict[opt['OutField']][0]
+      print "WARNING : forcing the operation flags to ensure the correct behaviour"
+      #opt.OutTRange=None
+      #opt['OutLayer']=None
+      opt['oao']=None
+
    VSpaceAverage=(opt['OutLayer'] is not None) 
-   TimeAverage=(opt['oat'] is not None) 
+   TimeAverage=(opt['OutTRange'] is not None or opt['oac'] is not None) 
+   if TimeAverage and opt['OutTRange'] is None : opt['OutTRange']=sp.ParseRange('[]')
    OSpaceAverage=(opt['oao'] is not None) 
+   FieldComputation=(opt['OutField'] is not None)
 
    One2One=(opt['InFile'] != 'list')
-   Many2One=(opt['InFile'] == 'list') and ( TimeAverage or opt['otc'] )
-   Many2Many=(opt['InFile'] == 'list') and not ( TimeAverage or opt['otc'] ) 
+   Many2One=(opt['InFile'] == 'list') and ( TimeAverage or opt['otc'] or FieldComputation )
+   Many2Many=(opt['InFile'] == 'list') and not ( TimeAverage or opt['otc'] or FieldComputation ) 
 
    print "\nInput"
    print " Input File/s    : ", opt['InFile']
    print " Selection Key   : ", opt['iKey']
+   print " Attribute Str   : ", opt['AttrStr']
    print "\nWorking Domain"
    print " Variable/s      : ", opt['Var']
    print " Time Range      :  None"
    print " Depth Range     :  None"
    print " Lon x Lat Range : ", sp.NoneOrList(opt['LonLat'])
    print "\nComputation"
-   print " Grid - Time      : ", opt['oat']
+   print " Grid - Time      : ", sp.NoneOrList(opt['OutTRange'])
+   print " Grid - Climatological Time      : ", opt['oac']
    print " Grid - Layer     : ", sp.NoneOrList(opt['OutLayer'])
    print " Grid - Lon x Lat : ", opt['oao']
+   print " Field            : ", opt['OutField']
    print "\nOutput"
    if Many2Many :
       print " File             : [InputFile]+",opt['OutFile']
@@ -137,6 +157,7 @@ def main():
    print " average over vertical space  :",VSpaceAverage
    print " average over orizontal space :",OSpaceAverage
    print " average over time            :",TimeAverage
+   print " compute new field            :",FieldComputation
    print "\nWhich I/O Flow Schema : "
    print " many to many :",Many2Many
    print " many to one  :",Many2One
@@ -153,31 +174,45 @@ def main():
 
    #my_sp=sp.sp(opt['Var'],opt['OutFile'],opt['LonLat'],opt['OutLayer'],opt['bm'],opt['s'],OutLonLat=opt['oao'], TimeAverage=TimeAverage , RemoveInput=opt['iClean'])
 
-   import sys
-
    if Many2One :
+      flagOutTRange=0
       #one=False
       InputFileName=sp.GetLine(opt['bm'],keyPattern)
       if InputFileName :
          if InputFileName[-4:]==".txt" :
+            if opt['OutTRange'] is not None and len(opt['OutTRange'])==1 :
+               if opt['OutTRange'][0]=='i6' : flagOutTRange=6
             while InputFileName :
                LocalInputFileName = GetInput(InputFileName)
                print "Processing group..."+LocalInputFileName
                sp.EchoInputFile(LocalInputFileName)
-               my_sp=sp.sp(opt['Var'],LocalInputFileName+opt['OutFile'],opt['LonLat'],opt['OutLayer'],opt['bm'],opt['s'],OutLonLat=opt['oao'], TimeAverage=TimeAverage , RemoveInput=opt['iClean'])
+               if flagOutTRange==6 :
+                  import numpy
+                  import datetime
+                  from calendar import monthrange
+                  first=datetime.datetime(int(LocalInputFileName[0:4]),int(LocalInputFileName[4:6]),1)
+                  last=datetime.datetime(int(LocalInputFileName[0:4]),int(LocalInputFileName[4:6]), monthrange(int(LocalInputFileName[0:4]),int(LocalInputFileName[4:6]))[1]  )
+                  first1m=last+datetime.timedelta(1)
+                  opt['OutTRange']=numpy.array([ first , first1m ])
+                  print " Grid - Time REDEF: ", sp.NoneOrList(opt['OutTRange'])
+               if FieldComputation :
+                  my_sp=comic.pilot(opt['OutField'],LocalInputFileName+opt['OutFile'],opt['LonLat'],opt['OutLayer'],opt['bm'],opt['s'],OutLonLat=opt['oao'], TimeRange=opt['OutTRange'], ClimatologicalAverage=opt['oac'], RemoveInput=opt['iClean'], AttrStr=opt['AttrStr'])
+               else :
+                  my_sp=comic.pilot(opt['Var'],LocalInputFileName+opt['OutFile'],opt['LonLat'],opt['OutLayer'],opt['bm'],opt['s'],OutLonLat=opt['oao'], TimeRange=opt['OutTRange'], ClimatologicalAverage=opt['oac'], RemoveInput=opt['iClean'], AttrStr=opt['AttrStr'])
                Many2OneBlock(opt['bm'],my_sp,LocalInputFileName,None,type="stream") 
                InputFileName=sp.GetLine(opt['bm'],keyPattern)
          else : #in this case must be InputFileName[-3:]==".nc"
             print "Processing simple..."
-            my_sp=sp.sp(opt['Var'],opt['OutFile'],opt['LonLat'],opt['OutLayer'],opt['bm'],opt['s'],OutLonLat=opt['oao'], TimeAverage=TimeAverage , RemoveInput=opt['iClean'])
+            if FieldComputation :
+               my_sp=comic.pilot(opt['OutField'],opt['OutFile'],opt['LonLat'],opt['OutLayer'],opt['bm'],opt['s'],OutLonLat=opt['oao'], TimeRange=opt['OutTRange'], ClimatologicalAverage=opt['oac'], RemoveInput=opt['iClean'], AttrStr=opt['AttrStr'])
+            else :
+               my_sp=comic.pilot(opt['Var'],opt['OutFile'],opt['LonLat'],opt['OutLayer'],opt['bm'],opt['s'],OutLonLat=opt['oao'], TimeRange=opt['OutTRange'], ClimatologicalAverage=opt['oac'], RemoveInput=opt['iClean'], AttrStr=opt['AttrStr'])
             Many2OneBlock(opt['bm'],my_sp,InputFileName,keyPattern)
    elif Many2Many :
-      my_sp=sp.sp(opt['Var'],opt['OutFile'],opt['LonLat'],opt['OutLayer'],opt['bm'],opt['s'],OutLonLat=opt['oao'], TimeAverage=TimeAverage , RemoveInput=opt['iClean'])
+      my_sp=comic.pilot(opt['Var'],opt['OutFile'],opt['LonLat'],opt['OutLayer'],opt['bm'],opt['s'],OutLonLat=opt['oao'], TimeRange=opt['OutTRange'], RemoveInput=opt['iClean'], AttrStr=opt['AttrStr'])
       InputFileName=sp.GetLine(opt['bm'],keyPattern)
-      print >>sys.stderr, 'dbdbdbdb InputFileName',InputFileName
       while InputFileName :
          LocalInputFileName = GetInput(InputFileName)
-         print >>sys.stderr, 'dbdbdbdb LocalInputFileName',LocalInputFileName
          sp.EchoInputFile(LocalInputFileName)
          output_name=my_sp.once(LocalInputFileName,OutFileNameIsPostfix=True)
          #os.remove(LocalInputFileName)

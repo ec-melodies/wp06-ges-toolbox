@@ -1,0 +1,17 @@
+
+usage example :
+
+
+python xml_gen.py 1987 1987 03 > application.xml
+
+---> in application.xml , workflow to process Jan,Feb,Mar in year 1987
+
+
+python xml_gen.py 1987 1988 05 > application.xml
+
+---> in application.xml , workflow to process from Jan/1987 to May/1988
+
+
+python xml_gen.py 1987 1988 12 > application.xml
+
+---> in application.xml , workflow to process from Jan/1987 to Dec/1988
