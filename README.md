@@ -50,6 +50,7 @@ Technical :
 List of prerequisites for this software execution :
 
 * NetCDF library - test done with version 4.4.1
-* Python - test done with version 2.7.9
-* numpy - test done with version 1.9.2
+* Python - test done with version 2.7.12
+* numpy - test done with version 1.11.1
 * netcdf4-python - test done with version 1.2.4
+* seawater - test done with version 3.3.4
